@@ -1,0 +1,9 @@
+FROM node:22-alpine
+WORKDIR /app
+COPY package.json pnpm-workspace.yaml ./
+COPY apps/api/package.json apps/api/
+COPY packages/database/package.json packages/database/
+RUN npm install --workspace apps/api --no-audit --no-fund || npm install
+COPY . .
+WORKDIR /app/apps/api
+CMD ["npm", "run", "start"]

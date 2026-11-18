@@ -1,0 +1,194 @@
+// Prisma schema - DOCKER / POSTGRES MODE.
+// Local mode (khong Docker) khong can chay file nay: API dung node:sqlite
+// voi cung bang nay, xem packages/database/src/db.ts.
+// De chuyen sang Postgres: DATABASE_URL=postgresql://user:password@localhost:5432/shop
+// roi chay: npx prisma migrate dev --schema packages/database/prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  status       String   @default("ACTIVE")
+  createdAt    DateTime @default(now())
+  roles        UserRole[]
+  carts        Cart[]
+  orders       Order[]
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  name        String           @unique
+  users       UserRole[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  code        String           @unique
+  description String
+  roles       RolePermission[]
+}
+
+model UserRole {
+  userId String
+  roleId String
+  user   User @relation(fields: [userId], references: [id])
+  role   Role @relation(fields: [roleId], references: [id])
+  @@id([userId, roleId])
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id])
+  permission   Permission @relation(fields: [permissionId], references: [id])
+  @@id([roleId, permissionId])
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String    @default("")
+  products    Product[]
+}
+
+model Product {
+  id          String           @id @default(cuid())
+  name        String
+  description String           @default("")
+  price       Int
+  status      String           @default("ACTIVE")
+  categoryId  String?
+  category    Category?        @relation(fields: [categoryId], references: [id])
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  variants    ProductVariant[]
+}
+
+model ProductVariant {
+  id            String     @id @default(cuid())
+  productId     String
+  product       Product    @relation(fields: [productId], references: [id])
+  sku           String     @unique
+  attributes    String     @default("{}")
+  price         Int
+  stockQuantity Int        @default(0)
+  cartItems     CartItem[]
+  orderItems    OrderItem[]
+}
+
+model Cart {
+  id     String     @id @default(cuid())
+  userId String     @unique
+  user   User       @relation(fields: [userId], references: [id])
+  items  CartItem[]
+}
+
+model CartItem {
+  id        String         @id @default(cuid())
+  cartId    String
+  cart      Cart           @relation(fields: [cartId], references: [id])
+  variantId String
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
+  quantity  Int
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  orderNumber     String      @unique
+  totalAmount     Int
+  status          String      @default("PENDING")
+  shippingAddress String      @default("")
+  createdAt       DateTime    @default(now())
+  items           OrderItem[]
+}
+
+model OrderItem {
+  id                  String         @id @default(cuid())
+  orderId             String
+  order               Order          @relation(fields: [orderId], references: [id])
+  variantId           String
+  variant             ProductVariant @relation(fields: [variantId], references: [id])
+  productNameSnapshot String
+  unitPriceSnapshot   Int
+  quantity            Int
+}
+
+model AgentSession {
+  id        String         @id @default(cuid())
+  userId    String
+  sessionId String         @unique
+  createdAt DateTime       @default(now())
+  messages  AgentMessage[]
+}
+
+model AgentMessage {
+  id        String       @id @default(cuid())
+  sessionId String
+  session   AgentSession @relation(fields: [sessionId], references: [sessionId])
+  role      String
+  content   String
+  createdAt DateTime     @default(now())
+}
+
+model AgentAuditLog {
+  id                  String   @id @default(cuid())
+  userId              String
+  action              String
+  resource            String
+  authorizationResult String
+  executionResult     String
+  createdAt           DateTime @default(now())
+}
+
+model KnowledgeDocument {
+  id       String           @id @default(cuid())
+  shopId   String           @default("shop-001")
+  title    String
+  category String
+  version  Int              @default(1)
+  status   String           @default("ACTIVE")
+  chunks   KnowledgeChunk[]
+}
+
+model KnowledgeChunk {
+  id           String            @id @default(cuid())
+  documentId   String
+  document     KnowledgeDocument @relation(fields: [documentId], references: [id])
+  chunkIndex   Int
+  content      String
+  metadata     String            @default("{}")
+  vectorPointId String?
+}
+
+model AiUsageLog {
+  id            String   @id @default(cuid())
+  userId        String
+  shopId        String   @default("shop-001")
+  model         String
+  inputTokens   Int
+  outputTokens  Int
+  estimatedCost Float
+  createdAt     DateTime @default(now())
+}
+
+model AgentIdempotencyKey {
+  id             String   @id @default(cuid())
+  userId         String
+  idempotencyKey String
+  action         String
+  result         String
+  createdAt      DateTime @default(now())
+  @@unique([userId, idempotencyKey, action])
+}

@@ -1,0 +1,24 @@
+{
+  "description": "E-commerce AI Agent MVP - Next.js + API + MCP + RAG + Guardrails + Cache + Cost",
+  "name": "shop-ai-agent",
+  "private": true,
+  "scripts": {
+    "build:api": "npm --workspace apps/api run build",
+    "build:web": "npm --workspace apps/web run build",
+    "dev:api": "npm --workspace apps/api run dev",
+    "dev:mcp": "npm --workspace apps/mcp-server run dev",
+    "dev:web": "npm --workspace apps/web run dev",
+    "seed": "npm --workspace apps/api run seed",
+    "test": "npm --workspace apps/api run test",
+    "format": "prettier --write \"apps/*/src/**/*.{ts,tsx}\" \"packages/*/src/**/*.{ts,tsx}\"",
+    "format:check": "prettier --check \"apps/*/src/**/*.{ts,tsx}\" \"packages/*/src/**/*.{ts,tsx}\""
+  },
+  "version": "1.0.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "devDependencies": {
+    "prettier": "^3.9.10"
+  }
+}
