@@ -19,6 +19,15 @@ export interface AgentContext {
   llm?: (prompt: string) => Promise<string>;
 }
 
+/**
+ * Bỏ tiêu đề markdown ("# ...") ở đầu chunk khi hiển thị câu trả lời
+ * ở chế độ không có LLM, vì giao diện chat hiển thị văn bản thuần,
+ * để nguyên sẽ thấy ký tự "#" thừa.
+ */
+function stripMarkdownHeaders(text: string): string {
+  return text.replace(/^#{1,6}\s+/gm, "").trim();
+}
+
 /** Trả lời mẫu khi không có LLM: dùng đúng dữ liệu đã có, không bịa thêm. */
 function formatProducts(products: { name: string; price: number; id: string }[]): string {
   return products.length
@@ -108,7 +117,7 @@ export async function runAgent(input: AgentState, ctx: AgentContext): Promise<Ag
         docs
           .map(
             (d: { document: string; content: string }) =>
-              `${d.content.trim()}\n(Nguồn: ${d.document})`,
+              `${stripMarkdownHeaders(d.content)}\n(Nguồn: ${d.document})`,
           )
           .join("\n\n"),
       );
@@ -118,7 +127,7 @@ export async function runAgent(input: AgentState, ctx: AgentContext): Promise<Ag
       state.response = docs
         .map(
           (d: { document: string; content: string }) =>
-            `${d.content.trim()}\n(Nguồn: ${d.document})`,
+            `${stripMarkdownHeaders(d.content)}\n(Nguồn: ${d.document})`,
         )
         .join("\n\n");
     }

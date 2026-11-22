@@ -12,6 +12,7 @@ export function classifyIntent(message: string): Intent {
     message
       .toLowerCase()
       .normalize("NFD")
+      .replace(/đ/g, "d") // "đ" không tách dấu được bằng NFD, phải đổi tay
       .replace(/[̀-ͯ]/g, "")
       .replace(/[^a-z0-9\s]/g, " ") +
     " ";

@@ -223,7 +223,9 @@ Không cần điền `QDRANT_URL`, `REDIS_URL`, `DATABASE_URL` cho chế độ
 Docker: file `docker-compose.yml` đã set sẵn cho service `api`
 là `QDRANT_URL=http://qdrant:6333`,
 `REDIS_URL=redis://redis:6379`,
-`DATABASE_URL=file:./shop.db`.
+`DATABASE_URL=file:/data/shop.db` (DB nằm trong volume `shopdata`,
+tách riêng khỏi thư mục code để rebuild không bị mất dữ liệu và
+không chạy nhầm code cũ).
 `QDRANT_API_KEY` để trống khi dùng Qdrant local trong compose,
 chỉ cần khi trỏ tới Qdrant Cloud.
 
@@ -234,6 +236,24 @@ docker compose up -d --build
 docker compose ps
 docker compose logs -f api
 ```
+
+File `.dockerignore` ở thư mục gốc loại `node_modules`, `.next`,
+`*.db` khỏi build context, nên lần build đầu chỉ chuyển chưa tới
+1MB thay vì ~400MB, và bước `COPY . .` không còn lỗi
+`cannot copy to non-directory` do symlink trong `node_modules`.
+
+Nếu trước đây bạn đã từng chạy compose với bản cũ (volume
+`shopdata` mount đè lên `/app/apps/api`), xóa volume cũ một lần
+để container dùng lại code mới trong image thay vì code cũ trong
+volume:
+
+```bash
+docker compose down -v
+docker compose up -d --build
+```
+
+(Lệnh này cũng xóa dữ liệu Qdrant và `shop.db` cũ — chỉ làm khi
+chưa có dữ liệu thật cần giữ.)
 
 Các service trong `docker-compose.yml`:
 
@@ -381,7 +401,11 @@ file TypeScript trong `apps/*/src` và `packages/*/src`.
 
 ```text
 shop-ai-agent/
-├── apps/web/          # Next.js: sản phẩm, giỏ, đơn, chat, quản trị
+├── apps/web/          # Next.js + Bootstrap 5: sản phẩm, giỏ, đơn, chat, quản trị
+│   │                  # Nav tự đổi theo trạng thái đăng nhập (đọc token sau khi
+│   │                  # mount + sự kiện "auth-changed", không gây lỗi hydration)
+│   │                  # Trang tài khoản (/account), chi tiết đơn (/orders/[id]),
+│   │                  # link Quản trị + trang /admin chỉ hiện với ADMIN/STAFF
 ├── apps/api/
 │   ├── src/server.ts      # Chỉ bootstrap: init DB -> seed -> nạp knowledge
 │   │                      # -> đồng bộ Qdrant -> listen (25 dòng)

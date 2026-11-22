@@ -1,5 +1,7 @@
+// Trang giỏ hàng: xem các món đã thêm, nhập địa chỉ và đặt hàng.
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { api, money } from "../../lib/api";
@@ -36,41 +38,82 @@ export default function Cart() {
   };
 
   if (!cart) {
-    return <p>Cần đăng nhập để xem giỏ hàng.</p>;
+    return (
+      <div className="alert alert-warning">
+        Cần đăng nhập để xem giỏ hàng.{" "}
+        <Link href="/login" className="alert-link">
+          Đăng nhập
+        </Link>
+      </div>
+    );
   }
 
   return (
-    <main>
-      <h1>Giỏ hàng</h1>
+    <>
+      <h1 className="h3 mb-4">Giỏ hàng</h1>
 
-      {cart.items.map((i: any) => (
-        <p key={i.id}>
-          {i.product_name} x {i.quantity} — {money(i.price * i.quantity)}{" "}
-          <button
-            onClick={async () => {
-              await api(`/cart/items/${i.id}`, { method: "DELETE" });
-              load();
-            }}
-          >
-            Xoá
+      {cart.items.length === 0 ? (
+        <div className="alert alert-info">
+          Giỏ hàng đang trống. Vào trang Sản phẩm để thêm hàng.
+        </div>
+      ) : (
+        <div className="card shadow-sm mb-4">
+          <table className="table table-hover mb-0 align-middle">
+            <thead className="table-light">
+              <tr>
+                <th>Sản phẩm</th>
+                <th className="text-center">Số lượng</th>
+                <th className="text-end">Thành tiền</th>
+                <th />
+              </tr>
+            </thead>
+            <tbody>
+              {cart.items.map((i: any) => (
+                <tr key={i.id}>
+                  <td>{i.product_name}</td>
+                  <td className="text-center">{i.quantity}</td>
+                  <td className="text-end">{money(i.price * i.quantity)}</td>
+                  <td className="text-end">
+                    <button
+                      className="btn btn-outline-danger btn-sm"
+                      onClick={async () => {
+                        await api(`/cart/items/${i.id}`, { method: "DELETE" });
+                        load();
+                      }}
+                    >
+                      Xoá
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <div className="card shadow-sm">
+        <div className="card-body">
+          <p className="fs-5">
+            Tổng: <strong className="text-primary">{money(total)}</strong>{" "}
+            <span className="text-muted small">(thanh toán giả lập, không thu tiền thật)</span>
+          </p>
+
+          <label className="form-label" htmlFor="address">
+            Địa chỉ giao hàng
+          </label>
+          <input
+            id="address"
+            className="form-control mb-3"
+            value={address}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder="Địa chỉ giao hàng"
+          />
+
+          <button className="btn btn-success" onClick={checkout} disabled={cart.items.length === 0}>
+            ✅ Đặt hàng (xác nhận)
           </button>
-        </p>
-      ))}
-
-      <p>
-        <b>Tổng: {money(total)}</b> (thanh toán giả lập, không thu tiền thật)
-      </p>
-
-      <input
-        value={address}
-        onChange={(e) => setAddress(e.target.value)}
-        placeholder="Địa chỉ giao hàng"
-        style={{ padding: 8 }}
-      />
-
-      <button onClick={checkout} style={{ marginLeft: 8 }}>
-        Đặt hàng (xác nhận)
-      </button>
-    </main>
+        </div>
+      </div>
+    </>
   );
 }

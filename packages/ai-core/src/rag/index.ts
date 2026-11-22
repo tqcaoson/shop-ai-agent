@@ -137,6 +137,22 @@ export async function syncKnowledgeToQdrant(dir: string): Promise<SyncKnowledgeR
 }
 
 /**
+ * Chỉ giữ lại các chunk có điểm từ 70% điểm cao nhất trở lên (luôn giữ
+ * chunk đứng đầu). Không lọc thì câu trả lời ở chế độ local sẽ nối cả
+ * những chunk chỉ khớp loáng thoáng (ví dụ hỏi "đổi trả" mà cả chunk
+ * FAQ cũng được nối vào), làm câu trả lời dài và lạc đề. Ngưỡng 70%
+ * vẫn giữ được chunk thứ hai khi câu hỏi thực sự cần 2 tài liệu
+ * (điểm của chúng thường gần nhau), nhưng loại chunk chỉ khớp nhờ
+ * 1-2 từ lẻ.
+ */
+function keepRelevantOnly(hits: CitedChunk[]): CitedChunk[] {
+  if (hits.length === 0) return hits;
+  const best = hits[0].score;
+  if (best <= 0) return hits;
+  return hits.filter((hit) => hit.score >= best * 0.7);
+}
+
+/**
  * Tìm kiến thức cho một câu hỏi.
  * Thử Qdrant trước nếu đã cấu hình; gặp lỗi hoặc không có kết quả thì
  * dùng tìm kiếm local và ghi cảnh báo tiếng Việt, không làm hỏng request.
@@ -158,7 +174,7 @@ export async function searchKnowledge(
         ? await embedText(query)
         : localEmbedding(query, dimension);
       const hits = await searchQdrant(vector, topK);
-      if (hits.length > 0) return hits;
+      if (hits.length > 0) return keepRelevantOnly(hits);
       console.warn("Cảnh báo: Qdrant không trả về kết quả nào, sẽ dùng tìm kiếm local.");
     } catch (error) {
       console.warn(
@@ -166,5 +182,5 @@ export async function searchKnowledge(
       );
     }
   }
-  return searchLocal(query, topK);
+  return keepRelevantOnly(searchLocal(query, topK));
 }

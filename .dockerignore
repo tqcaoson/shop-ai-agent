@@ -1,0 +1,24 @@
+# Loại khỏi build context của Docker.
+#
+# node_modules BẮT BUỘC phải loại: npm workspaces tạo symlink trong
+# node_modules (node_modules/apps-api -> apps/api). Nếu copy cả thư mục
+# này vào image, bước COPY . . sẽ đè lên node_modules do npm install
+# tạo ra trong image và build lỗi:
+# "cannot copy to non-directory: .../app/node_modules/apps-api".
+# Loại nó cũng giảm context từ ~400MB xuống dưới 1MB.
+node_modules
+
+# Output build local, không cần đưa vào image.
+.next
+dist
+
+# Database SQLite local (trong Docker, DB nằm ở volume /data).
+*.db
+
+# Git history và file môi trường (chứa secret, compose truyền env riêng).
+.git
+.env
+
+# File tạm và log.
+*.log
+coverage

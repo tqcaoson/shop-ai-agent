@@ -140,6 +140,7 @@ export function localEmbedding(text: string, dim = 384): number[] {
   const words = text
     .toLowerCase()
     .normalize("NFD")
+    .replace(/đ/g, "d") // "đ" không tách dấu được bằng NFD, phải đổi tay
     .replace(/[̀-ͯ]/g, "")
     .replace(/[^a-z0-9\s]/g, " ")
     .split(/\s+/)

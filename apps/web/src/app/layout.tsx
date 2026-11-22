@@ -1,19 +1,19 @@
-import Link from "next/link";
+// Layout gốc: nạp CSS của Bootstrap, thanh điều hướng và khung trang.
+import "bootstrap/dist/css/bootstrap.min.css";
+
+import Nav from "../components/Nav";
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="vi">
-      <body style={{ fontFamily: "system-ui", maxWidth: 960, margin: "0 auto", padding: 20 }}>
-        <nav style={{ display: "flex", gap: 16, marginBottom: 24 }}>
-          <Link href="/">Sản phẩm</Link>
-          <Link href="/cart">Giỏ hàng</Link>
-          <Link href="/orders">Đơn hàng</Link>
-          <Link href="/chat">Chat AI</Link>
-          <Link href="/admin">Admin</Link>
-          <Link href="/login">Đăng nhập</Link>
-        </nav>
+      <body className="bg-light">
+        <Nav />
 
-        {children}
+        <main className="container py-4">{children}</main>
+
+        <footer className="text-center text-muted small py-4 border-top">
+          Shop AI Agent — MVP demo, thanh toán giả lập, không thu tiền thật.
+        </footer>
       </body>
     </html>
   );

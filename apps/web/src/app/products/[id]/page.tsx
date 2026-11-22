@@ -1,3 +1,4 @@
+// Trang chi tiết sản phẩm: chọn biến thể rồi thêm vào giỏ.
 "use client";
 
 import { use, useEffect, useState } from "react";
@@ -19,7 +20,13 @@ export default function Detail({ params }: { params: Promise<{ id: string }> }) 
   }, [id]);
 
   if (!p) {
-    return <p>Đang tải...</p>;
+    return (
+      <div className="text-center py-5">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Đang tải...</span>
+        </div>
+      </div>
+    );
   }
 
   const addToCart = async () => {
@@ -36,22 +43,32 @@ export default function Detail({ params }: { params: Promise<{ id: string }> }) 
   };
 
   return (
-    <main>
-      <h1>{p.name}</h1>
-      <p>{p.description}</p>
-      <p>{money(p.price)}</p>
+    <div className="card shadow-sm">
+      <div className="card-body">
+        <h1 className="card-title h3">{p.name}</h1>
+        <p className="card-text text-muted">{p.description}</p>
+        <p className="fs-4 fw-bold text-primary">{money(p.price)}</p>
 
-      <select value={variant} onChange={(e) => setVariant(e.target.value)}>
-        {p.variants?.map((v: any) => (
-          <option key={v.id} value={v.id}>
-            {v.attributes} — tồn kho: {v.stock_quantity} — {money(v.price)}
-          </option>
-        ))}
-      </select>
+        <label className="form-label" htmlFor="variant">
+          Biến thể
+        </label>
+        <select
+          id="variant"
+          className="form-select mb-3"
+          value={variant}
+          onChange={(e) => setVariant(e.target.value)}
+        >
+          {p.variants?.map((v: any) => (
+            <option key={v.id} value={v.id}>
+              {v.attributes} — tồn kho: {v.stock_quantity} — {money(v.price)}
+            </option>
+          ))}
+        </select>
 
-      <button style={{ marginLeft: 8 }} onClick={addToCart}>
-        Thêm vào giỏ
-      </button>
-    </main>
+        <button className="btn btn-primary" onClick={addToCart}>
+          🛒 Thêm vào giỏ
+        </button>
+      </div>
+    </div>
   );
 }
